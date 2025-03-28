@@ -266,10 +266,14 @@ class GraphView @JvmOverloads constructor(
     }
 
     fun updateConnection(connection: Graph.Connection, label: String, color: Int, strokeWidth: Float) {
-        connection.label = label
-        connection.color = color
-        connection.strokeWidth = strokeWidth
-        invalidate()
+        graph.getConnections().firstOrNull { it == connection }?.let {
+            it.label = label
+            it.color = color
+            it.strokeWidth = strokeWidth
+            // Mettre à jour la connexion sélectionnée
+            selectedConnection = it
+            invalidate()
+        }
     }
 
     private fun findNodeAt(x: Float, y: Float): Graph.Node? {
@@ -291,9 +295,9 @@ class GraphView @JvmOverloads constructor(
             val end = connection.end.position
 
             // Vérifier si le point est proche de la ligne
-            if (isPointNearLine(x, y, start.x, start.y, end.x, end.y)) {
+            /*if (isPointNearLine(x, y, start.x, start.y, end.x, end.y)) {
                 return connection
-            }
+            }*/
 
             // Vérifier si le point est proche de l'étiquette
             val midX = (start.x + end.x) / 2
@@ -404,17 +408,17 @@ class GraphView @JvmOverloads constructor(
                     }
                 } else if (duration >= 1000) { // Long click
                     touchDownPosition?.let { position ->
-                        // Vérifier d'abord les nœuds
-                        selectedNode = findNodeAt(position.x, position.y)
-                        selectedNode?.let { node ->
-                            listener?.onNodeLongClick(node)
-                            return true
-                        }
-
-                        // Si aucun nœud, vérifier les étiquettes de connexion
+                        // Vérifier d'abord si c'est une étiquette de connexion
                         selectedConnection = findConnectionAt(position.x, position.y)
                         selectedConnection?.let { connection ->
                             listener?.onConnectionLongClick(connection)
+                            return true
+                        }
+
+                        // Si ce n'est pas une étiquette, vérifier les nœuds
+                        selectedNode = findNodeAt(position.x, position.y)
+                        selectedNode?.let { node ->
+                            listener?.onNodeLongClick(node)
                         }
                     }
                 }
