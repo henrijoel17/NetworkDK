@@ -245,17 +245,17 @@ class GraphView @JvmOverloads constructor(
     fun removeSelectedNode() {
         selectedNode?.let {
             graph.removeNode(it)
-            selectedNode = null
             invalidate()
         }
+        selectedNode = null
     }
 
     fun removeSelectedConnection() {
         selectedConnection?.let {
             graph.removeConnection(it)
-            selectedConnection = null
             invalidate()
         }
+        selectedConnection = null
     }
 
     fun updateNode(node: Graph.Node, label: String, color: Int, imageRes: Int?) {
