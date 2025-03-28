@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!-- Gestion du réseau -->
+    <item
+        android:id="@+id/resetMenuItem"
+        android:title="Réinitialiser le réseau"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_save"
+        android:title="Sauvegarder le réseau"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_load"
+        android:title="Afficher un réseau sauvegardé"
+        app:showAsAction="never"/>
+
+    <!-- Modes de travail -->
+    <item
+        android:id="@+id/action_modes"
+        android:title="Modes de travail">
+        <menu>
+            <item
+                android:id="@+id/addNodeMenuItem"
+                android:title="Ajout d'objets"/>
+            <item
+                android:id="@+id/addConnectionMenuItem"
+                android:title="Ajout de connexions"/>
+            <item
+                android:id="@+id/action_edit"
+                android:title="Modification d'objets/connexions"/>
+        </menu>
+    </item>
+
+</menu>
