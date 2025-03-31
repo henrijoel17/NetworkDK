@@ -29,6 +29,9 @@ class GraphView @JvmOverloads constructor(
     private var tempConnectionEnd: PointF? = null
     private var tempConnectionLabel: String = ""
 
+    private var lastTouchTime: Long = 0
+    private val doubleClickThreshold: Long = 500
+
     private val nodePaint = Paint().apply {
         isAntiAlias = true
         style = Paint.Style.FILL
@@ -68,18 +71,11 @@ class GraphView @JvmOverloads constructor(
         fun onNodeLongClick(node: Graph.Node)
         fun onConnectionLongClick(connection: Graph.Connection)
         fun showConnectionLabelDialog(startNode: Graph.Node, endNode: Graph.Node)
+        fun CreateNodeLongPress(position: PointF)
+        fun onNodeDoubleClick(node: Graph.Node)
     }
 
     var listener: GraphViewListener? = null
-
-    fun initializeGraph() {
-        for (i in 0 until 2) {
-            for (j in 0 until 3) {
-                graph.addNode(PointF(100f + j * 200f, 100f + i * 200f), "defaut")
-            }
-        }
-        invalidate()
-    }
 
     fun completeConnection(label: String) {
         if (tempConnectionStart != null && tempConnectionEnd != null) {
@@ -87,20 +83,6 @@ class GraphView @JvmOverloads constructor(
         tempConnectionStart = null
         tempConnectionEnd = null
         tempConnectionLabel = ""
-        invalidate()
-    }
-
-    fun addNode() {
-        val nodes = graph.getNodes()
-        val lastNode = nodes.lastOrNull()
-        val newX = lastNode?.position?.x ?: 100f
-        val newY = lastNode?.position?.y ?: 100f
-
-        if (nodes.size % 3 == 0) {
-            graph.addNode(PointF(100f, newY + 200f), "defaut")
-        } else {
-            graph.addNode(PointF(newX + 200f, newY), "defaut")
-        }
         invalidate()
     }
 
@@ -141,6 +123,11 @@ class GraphView @JvmOverloads constructor(
     fun cancelConnection() {
         tempConnectionStart = null;
         tempConnectionEnd = null;
+        invalidate()
+    }
+
+    fun addNodeAtPosition(position: PointF, label: String, color: Int = defaultNodeColor, imageRes: Int? = null) {
+        graph.addNode(position, label, color, imageRes)
         invalidate()
     }
 
@@ -246,14 +233,16 @@ class GraphView @JvmOverloads constructor(
         selectedNode?.let {
             graph.removeNode(it)
             invalidate()
+            selectedNode = null
         }
-        selectedNode = null
+
     }
 
     fun removeSelectedConnection() {
         selectedConnection?.let {
             graph.removeConnection(it)
             invalidate()
+            //selectedConnection = null
         }
         selectedConnection = null
     }
@@ -294,10 +283,6 @@ class GraphView @JvmOverloads constructor(
             val start = connection.start.position
             val end = connection.end.position
 
-            // Vérifier si le point est proche de la ligne
-            /*if (isPointNearLine(x, y, start.x, start.y, end.x, end.y)) {
-                return connection
-            }*/
 
             // Vérifier si le point est proche de l'étiquette
             val midX = (start.x + end.x) / 2
@@ -318,41 +303,13 @@ class GraphView @JvmOverloads constructor(
         return null
     }
 
-    private fun isPointNearLine(px: Float, py: Float, x1: Float, y1: Float, x2: Float, y2: Float, tolerance: Float = 15f): Boolean {
-        // Calcul de la distance entre le point et la ligne
-        val A = px - x1
-        val B = py - y1
-        val C = x2 - x1
-        val D = y2 - y1
-
-        val dot = A * C + B * D
-        val len_sq = C * C + D * D
-        var param = -1f
-        if (len_sq != 0f) param = dot / len_sq
-
-        var xx: Float
-        var yy: Float
-
-        if (param < 0) {
-            xx = x1
-            yy = y1
-        } else if (param > 1) {
-            xx = x2
-            yy = y2
-        } else {
-            xx = x1 + param * C
-            yy = y1 + param * D
-        }
-
-        val dx = px - xx
-        val dy = py - yy
-        return Math.sqrt((dx * dx + dy * dy).toDouble()) <= tolerance
-    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
 
             MotionEvent.ACTION_DOWN -> {
+                val currentTime = System.currentTimeMillis()
+
                 touchDownTime = System.currentTimeMillis()
                 touchDownPosition = PointF(event.x, event.y)
 
@@ -365,6 +322,13 @@ class GraphView @JvmOverloads constructor(
                 } else {
                     selectedNode = findNodeAt(event.x, event.y)
                     //selectedConnection = findConnectionAt(event.x, event.y)
+                    if (currentTime - lastTouchTime < doubleClickThreshold) {
+                        // Double click detected
+                        listener?.onNodeDoubleClick(selectedNode!!)
+                        //selectedNode = null // Clear selection after double click
+                    }
+                    lastTouchTime = currentTime
+
                     if (selectedNode == null) {
                         selectedConnection = findConnectionAt(event.x, event.y)
                     }
@@ -395,7 +359,6 @@ class GraphView @JvmOverloads constructor(
 
             MotionEvent.ACTION_UP -> {
                 val duration = System.currentTimeMillis() - touchDownTime
-
                 if (isConnectionMode) {
                     if (tempConnectionStart != null) {
                         val endNode = findNodeAt(event.x, event.y)
@@ -406,8 +369,10 @@ class GraphView @JvmOverloads constructor(
                             cancelConnection()
                         }
                     }
-                } else if (duration >= 1000) { // Long click
+                } else if (duration >= 1000 && selectedNode == null ) {
+                    // Long click
                     touchDownPosition?.let { position ->
+
                         // Vérifier d'abord si c'est une étiquette de connexion
                         selectedConnection = findConnectionAt(position.x, position.y)
                         selectedConnection?.let { connection ->
@@ -417,8 +382,9 @@ class GraphView @JvmOverloads constructor(
 
                         // Si ce n'est pas une étiquette, vérifier les nœuds
                         selectedNode = findNodeAt(position.x, position.y)
-                        selectedNode?.let { node ->
-                            listener?.onNodeLongClick(node)
+                        if(selectedNode == null){
+                            //listener?.onNodeLongClick(selectedNode!!)
+                            listener?.CreateNodeLongPress(position)
                         }
                     }
                 }

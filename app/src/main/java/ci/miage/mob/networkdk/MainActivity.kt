@@ -56,6 +56,10 @@ class MainActivity : AppCompatActivity(), GraphView.GraphViewListener {
         }
     }
 
+    override fun onNodeDoubleClick(node: Graph.Node){
+        showNodeOptionsDialog(node)
+    }
+
     override fun onNodeLongClick(node: Graph.Node) {
         showNodeOptionsDialog(node)
     }
@@ -328,6 +332,81 @@ class MainActivity : AppCompatActivity(), GraphView.GraphViewListener {
             val selectedImageRes = images[imageSpinner.selectedItemPosition].second
 
             graphView.addNodeWithLabel(PointF(0f,0f), newLabel, selectedColor, selectedImageRes)
+
+        }
+
+        builder.setNegativeButton("Annuler", null)
+        builder.show()
+    }
+
+    override fun CreateNodeLongPress(position: PointF) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Création du nœud")
+
+        val view = layoutInflater.inflate(R.layout.dialog_create_node, null)
+        builder.setView(view)
+
+        val labelEdit = view.findViewById<EditText>(R.id.createNodeLabel)
+        val colorSpinner = view.findViewById<Spinner>(R.id.createNodeColorSpinner)
+        val imageSpinner = view.findViewById<Spinner>(R.id.createNodeImageSpinner)
+        val imagePreview = view.findViewById<ImageView>(R.id.createNodeImagePreview)
+
+        // Couleurs
+        val colors = arrayOf(
+            "Bleu" to Color.BLUE,
+            "Rouge" to Color.RED,
+            "Vert" to Color.GREEN,
+            "Orange" to Color.parseColor("#FFA500"),
+            "Cyan" to Color.CYAN,
+            "Magenta" to Color.MAGENTA,
+            "Noir" to Color.BLACK
+        )
+
+        val colorAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            colors.map { it.first }
+        )
+        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        colorSpinner.adapter = colorAdapter
+
+        // Images
+        val images = listOf(
+            "Aucune" to null,
+            "Imprimante" to R.drawable.ic_printer,
+            "Télévision" to R.drawable.ic_tv,
+            "Ordinateur" to R.drawable.ic_computer,
+            "Téléphone" to R.drawable.ic_phone
+        )
+
+        val imageAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            images.map { it.first }
+        )
+        imageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        imageSpinner.adapter = imageAdapter
+
+        // Mettre à jour la prévisualisation lorsque l'image est sélectionnée
+        imageSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val selectedImageRes = images[position].second
+                if (selectedImageRes != null) {
+                    imagePreview.setImageResource(selectedImageRes)
+                } else {
+                    imagePreview.setImageDrawable(null)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
+        builder.setPositiveButton("Créer") { _, _ ->
+            val newLabel = labelEdit.text.toString()
+            val selectedColor = colors[colorSpinner.selectedItemPosition].second
+            val selectedImageRes = images[imageSpinner.selectedItemPosition].second
+            graphView.addNodeAtPosition(position, newLabel, selectedColor, selectedImageRes)
+
         }
 
         builder.setNegativeButton("Annuler", null)
