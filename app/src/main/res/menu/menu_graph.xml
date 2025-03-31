@@ -14,7 +14,7 @@
 
     <item
         android:id="@+id/action_load"
-        android:title="Afficher un réseau sauvegardé"
+        android:title="Charger le réseau sauvegardé"
         app:showAsAction="never"/>
 
     <!-- Modes de travail -->

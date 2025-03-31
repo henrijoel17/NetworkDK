@@ -15,6 +15,7 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
+
 class MainActivity : AppCompatActivity(), GraphView.GraphViewListener {
     private lateinit var graphView: GraphView
 
@@ -50,6 +51,14 @@ class MainActivity : AppCompatActivity(), GraphView.GraphViewListener {
             }
             R.id.action_edit -> {
                 graphView.activeEdit()
+                true
+            }
+            R.id.action_save -> {
+                saveNetwork()
+                true
+            }
+            R.id.action_load -> {
+                loadNetwork()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -413,5 +422,27 @@ class MainActivity : AppCompatActivity(), GraphView.GraphViewListener {
         builder.show()
     }
 
+    private fun saveNetwork() {
+        val filename = "network_${System.currentTimeMillis()}.json"
+        if (graphView.saveToFile(this, filename)) {
+            Toast.makeText(this, "Réseau sauvegardé: $filename", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Erreur lors de la sauvegarde", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun loadNetwork() {
+        val files = fileList().filter { it.endsWith(".json") }
+        if (files.isNotEmpty()) {
+            val lastFile = files.last()
+            if (graphView.loadFromFile(this, lastFile)) {
+                Toast.makeText(this, "Réseau chargé: $lastFile", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Erreur lors du chargement", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(this, "Aucun fichier trouvé", Toast.LENGTH_SHORT).show()
+        }
+    }
 
 }

@@ -3,21 +3,38 @@ package ci.miage.mob.networkdk
 import android.graphics.Color
 import android.graphics.PointF
 import android.util.Log
+import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 class Graph {
 
     private val nodes = mutableListOf<Node>()
     private val connections = mutableSetOf<Connection>()
 
-    data class Node(var position: PointF, var label: String, var color: Int = Color.BLUE, var imageRes: Int? = null)
+    data class Node(
+        @SerializedName("position")
+        var position: PointF,
+        @SerializedName("label")
+        var label: String,
+        @SerializedName("color")
+        var color: Int = Color.BLUE,
+        @SerializedName("imageRes")
+        var imageRes: Int? = null
+    ): Serializable
 
     data class Connection(
+        @SerializedName("start")
         val start: Node,
+        @SerializedName("end")
         val end: Node,
+        @SerializedName("label")
         var label: String = "",
+        @SerializedName("color")
         var color: Int = Color.BLACK,
+        @SerializedName("strokeWidth")
         var strokeWidth: Float = 10f
-    ){
+    ): Serializable{
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Connection) return false
@@ -59,11 +76,25 @@ class Graph {
         connections.clear()
     }
 
+    fun clearNode(){
+        nodes.clear()
+    }
+
     fun getNodes(): List<Node> {
         return nodes
     }
 
     fun getConnections(): Set<Connection> {
         return connections
+    }
+
+    fun toJson(): String {
+        return Gson().toJson(this)
+    }
+
+    companion object {
+        fun fromJson(json: String): Graph {
+            return Gson().fromJson(json, Graph::class.java)
+        }
     }
 }

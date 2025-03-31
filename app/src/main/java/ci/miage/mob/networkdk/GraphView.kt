@@ -397,5 +397,39 @@ class GraphView @JvmOverloads constructor(
         return true
     }
 
+    fun saveToFile(context: Context, filename: String): Boolean {
+        return try {
+            val json = graph.toJson()
+            context.openFileOutput(filename, Context.MODE_PRIVATE).use {
+                it.write(json.toByteArray())
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun loadFromFile(context: Context, filename: String): Boolean {
+        return try {
+            val json = context.openFileInput(filename).bufferedReader().use {
+                it.readText()
+            }
+            val loadedGraph = Graph.fromJson(json)
+
+            // Mettre à jour le graph actuel
+            graph.clearNode()
+            graph.clearConnections()
+
+            loadedGraph.getNodes().forEach { graph.addNode(it.position, it.label, it.color, it.imageRes) }
+            loadedGraph.getConnections().forEach { graph.addConnection(it.start, it.end, it.label) }
+
+            invalidate()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 
 }
