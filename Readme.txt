@@ -1,0 +1,2 @@
+-Faites un double click sur un noeud pour avoir l'option du noeud 
+-Après avoir ajouter des connexions entre les noeuds il faut passer en mode Modification d'objets/connexions pour les modifications des noeuds et connexions 
